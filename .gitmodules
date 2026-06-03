@@ -1,0 +1,4 @@
+[submodule "proto"]
+	path = proto
+	url = git@gitlab.com:chichilaki/mgs/proto.git
+	
