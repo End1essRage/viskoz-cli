@@ -5,12 +5,12 @@ use tracing;
 mod platform;
 mod runner;
 mod tailscale;
- 
+
 use anyhow::Result;
-use cli::{Cli, Commands};
+use cli::{Cli, Commands, UserAction, RunnerAction};
 use clap::Parser;
 use tracing::info;
- 
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
@@ -19,22 +19,33 @@ async fn main() -> Result<()> {
                 .add_directive("runner_cli=debug".parse()?),
         )
         .init();
- 
+
     let cli = Cli::parse();
- 
+
     match cli.command {
-        Commands::Start(args) => {
-            info!("Starting runner-cli...");
-            cli::start::handle(args).await?; 
+        Commands::User(user_cmd) => {
+            match user_cmd.command {
+                UserAction::Connect(args) => {
+                    info!("Starting mesh...");
+                    cli::connect::handle(args).await?;
+                }
+            }
         }
-        Commands::Stop => {
-            cli::stop::handle().await?;
-        }
-        Commands::Status => {
-            cli::status::handle().await?;
+        Commands::Runner(runner_cmd) => {
+            match runner_cmd.command {
+                RunnerAction::Start(args) => {
+                    info!("Starting runner...");
+                    cli::start::handle(args).await?;
+                }
+                RunnerAction::Stop => {
+                    cli::stop::handle().await?;
+                }
+                RunnerAction::Status => {
+                    cli::status::handle().await?;
+                }
+            }
         }
     }
- 
+
     Ok(())
 }
- 

@@ -796,6 +796,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b947ae49db0d222b1dbc6b113ce7248a3fc3a6ca21b696717bfc000ba4484d8"
 
 [[package]]
+name = "mgs-cli"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bollard",
+ "clap",
+ "dirs",
+ "prost",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tonic",
+ "tonic-prost",
+ "tonic-prost-build",
+ "tracing",
+ "tracing-subscriber",
+ "windows",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1075,28 +1097,6 @@ name = "regex-syntax"
 version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
-
-[[package]]
-name = "runner-cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "bollard",
- "clap",
- "dirs",
- "prost",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "toml",
- "tonic",
- "tonic-prost",
- "tonic-prost-build",
- "tracing",
- "tracing-subscriber",
- "windows",
-]
 
 [[package]]
 name = "rustix"

@@ -3,43 +3,86 @@ use clap::{Parser, Subcommand, Args};
 pub mod start;
 pub mod stop;
 pub mod status;
- 
+pub mod connect;
+
 #[derive(Parser)]
-#[command(name = "runner-cli", about = "GameHost runner manager")]
+#[command(name = "mgs-cli", about = "GameHost runner manager")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 }
- 
+
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Запустить runner
-    Start(StartArgs),
+    /// Команды для управления пользователями
+    User(UserCommands),
+    /// Команды для управления раннером
+    Runner(RunnerCommands),
+}
+
+// Убираем #[derive(Subcommand)] - теперь это обычное перечисление
+// которое будет использоваться как аргументы для команды User
+#[derive(clap::Args)]
+pub struct UserCommands {
+    #[command(subcommand)]
+    pub command: UserAction,
+}
+
+// Убираем #[derive(Subcommand)] - теперь это обычное перечисление
+// которое будет использоваться как аргументы для команды Runner
+#[derive(clap::Args)]
+pub struct RunnerCommands {
+    #[command(subcommand)]
+    pub command: RunnerAction,
+}
+
+#[derive(Subcommand)]
+pub enum UserAction {
+    /// Подключение пользователя (mesh)
+    Connect(UserConnectArgs),
+    // Здесь можно добавить другие действия для пользователя
+    // List,
+    // Remove,
+}
+
+#[derive(Subcommand)]
+pub enum RunnerAction {
+    /// Запустить runner + mesh
+    Start(RunnerStartArgs),
     /// Остановить runner
     Stop,
     /// Статус runner'а
     Status,
 }
- 
+
 #[derive(Args)]
-pub struct StartArgs {
+pub struct UserConnectArgs {
     /// Адрес control-plane
     #[arg(long, env = "CP_ADDRESS")]
     pub cp_address: String,
 
     #[arg(long, env = "JOIN_SECRET")]
     pub join_secret: String,
- 
+}
+
+#[derive(Args)]
+pub struct RunnerStartArgs {
+    /// Адрес control-plane
+    #[arg(long, env = "CP_ADDRESS")]
+    pub cp_address: String,
+
+    #[arg(long, env = "JOIN_SECRET")]
+    pub join_secret: String,
+
     /// CPU cores доступные для runner'а
     #[arg(long, default_value = "2")]
     pub cpu_cores: u32,
- 
+
     /// RAM в MB
     #[arg(long, default_value = "4096")]
     pub memory_mb: u64,
- 
+
     /// Disk в MB
     #[arg(long, default_value = "20480")]
     pub disk_mb: u64,
 }
- 

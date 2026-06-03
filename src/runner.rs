@@ -5,9 +5,9 @@ use bollard::query_parameters::CreateContainerOptions;
 
 use crate::grpc::proto::RegisterRunnerResponse;
 
-use crate::cli::StartArgs;
+use crate::cli::RunnerStartArgs;
 
-pub async fn start(reg: &RegisterRunnerResponse, mesh_ip: &str, args: &StartArgs) -> Result<()> {
+pub async fn start(reg: &RegisterRunnerResponse, mesh_ip: &str, args: &RunnerStartArgs) -> Result<()> {
     let docker = Docker::connect_with_local_defaults()?;
 
     let env = vec![

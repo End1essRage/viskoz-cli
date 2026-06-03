@@ -1,10 +1,10 @@
 [package]
-name = "runner-cli"
+name = "mgs-cli"
 version = "0.0.1"
 edition = "2024"
 
 [[bin]]
-name = "runner-cli"
+name = "mgs-cli"
 path = "src/main.rs"
  
 [dependencies]
