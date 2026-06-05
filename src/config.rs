@@ -6,9 +6,8 @@ const CONFIG_FILE: &str = "mgs-cli.toml";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub cp_address: String,
     pub mesh_ip: String,
-    pub runner_token: String,
+    pub cp_runner_addr: String,
 }
 
 impl Config {

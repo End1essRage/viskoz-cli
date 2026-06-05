@@ -78,7 +78,6 @@ fn check_tailscaled_process() -> Result<()> {
         • Linux (systemd): sudo systemctl start tailscaled\n\
         • Linux (manual): sudo tailscaled\n\
         • macOS: sudo tailscaled\n\
-        • After starting, run: sudo tailscale up\n\n\
         For more info: https://tailscale.com/download"
     )
 }

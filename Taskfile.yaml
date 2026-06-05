@@ -1,0 +1,18 @@
+version: "3"
+
+vars:
+  GOIMPORTS_VERSION: latest
+  GOLANGCI_LINT_VERSION: v2.12.2
+
+tasks:
+  default:
+    cmds:
+      - task --list-all
+
+  # ./data should be created
+  exmp:
+    desc: "стартует мок контрол плейна из папки tests/cp-stub и раннер с дефолтным конфигом cmd/config"
+    cmds:
+      - mkdir -p ./data
+      - chown 1000:1000 ./data
+      - cargo run runner start --cp-address-runner localhost:9096 --join-secret none --host-data-path "${PWD}/data" --host-data-bind "${PWD}/data"

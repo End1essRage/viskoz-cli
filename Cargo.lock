@@ -800,9 +800,11 @@ name = "mgs-cli"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "base64",
  "bollard",
  "clap",
  "dirs",
+ "futures-util",
  "prost",
  "serde",
  "serde_json",

@@ -58,8 +58,8 @@ pub enum RunnerAction {
 #[derive(Args)]
 pub struct UserConnectArgs {
     /// Адрес control-plane
-    #[arg(long, env = "CP_ADDRESS")]
-    pub cp_address: String,
+    #[arg(long, env = "CP_ADDRESS_USER")]
+    pub cp_address_user: String,
 
     #[arg(long, env = "JOIN_SECRET")]
     pub join_secret: String,
@@ -68,11 +68,17 @@ pub struct UserConnectArgs {
 #[derive(Args)]
 pub struct RunnerStartArgs {
     /// Адрес control-plane
-    #[arg(long, env = "CP_ADDRESS")]
-    pub cp_address: String,
+    #[arg(long, env = "CP_ADDRESS_RUNNER")]
+    pub cp_address_runner: String,
 
     #[arg(long, env = "JOIN_SECRET")]
     pub join_secret: String,
+
+    #[arg(long, env = "HOST_DATA_PATH")]
+    pub host_data_path: String,
+
+    #[arg(long, env = "HOST_DATA_BIND")]
+    pub host_data_bind: String,
 
     /// CPU cores доступные для runner'а
     #[arg(long, default_value = "2")]

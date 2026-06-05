@@ -3,7 +3,7 @@ use tracing::{info,error};
 
 use crate::cli::RunnerStartArgs;
 use crate::config::Config;
-use crate::grpc::CpClient;
+use crate::grpc::CpRunnerClient;
 use crate::platform;
 use crate::tailscale;
 use crate::runner;
@@ -15,21 +15,23 @@ pub async fn handle(args: RunnerStartArgs) -> Result<()> {
     platform::check_tailscaled().await?;
  
     // 2. Регистрируемся в CP, получаем всё необходимое
-    info!("Registering with control-plane at {}...", args.cp_address);
-    let mut cp = CpClient::connect(&args.cp_address).await?;
+    info!("Registering with control-plane at {}...", args.cp_address_runner);
+    let mut cp = CpRunnerClient::connect(&args.cp_address_runner).await?;
     let reg = cp.register_runner(&args).await?;
+
+    info!("CP MESH IP: {}", reg.cp_mesh_address);
  
     // 3. Поднимаем tailscale
     info!("Bringing up tailscale mesh...");
     let mesh_ip = tailscale::up(&reg.headscale_url, &reg.headscale_auth_key).await?;
     info!("Mesh IP: {}", mesh_ip);
- 
+
     // 4. Сохраняем состояние локально
     info!("Saving config...");
     let config = Config {
-        cp_address: args.cp_address.clone(),
+        //TODO
+        cp_runner_addr: reg.cp_mesh_address.clone(),
         mesh_ip: mesh_ip.clone(),
-        runner_token: reg.runner_token.clone(),
     };
     
     // Добавьте отладку
@@ -50,7 +52,7 @@ pub async fn handle(args: RunnerStartArgs) -> Result<()> {
     let upd = cp.update_mesh_ip(reg.runner_token.clone(),mesh_ip.clone()).await?;
     // 6. Запускаем runner контейнер
     info!("Starting runner container...");
-    runner::start(&reg, &mesh_ip, &args).await?;
+    runner::start(&reg, &args).await?;
  
     info!("Runner started successfully");
     Ok(())
