@@ -51,7 +51,6 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
             format!("{}:/data", args.host_data_bind),
         ]),
         network_mode: Some("host".to_string()),  // ← контейнер видит сеть хоста включая tailscale0
-        dns: Some(vec!["100.100.100.100".to_string()]),
         nano_cpus: Some((args.cpu_cores as i64) * 1_000_000_000),
         memory: Some((args.memory_mb as i64) * 1024 * 1024),
         ..Default::default()
