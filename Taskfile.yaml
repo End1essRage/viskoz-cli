@@ -10,9 +10,16 @@ tasks:
       - task --list-all
 
   # ./data should be created
-  exmp:
-    desc: "стартует мок контрол плейна из папки tests/cp-stub и раннер с дефолтным конфигом cmd/config"
+  start:runner:
+    desc: "создает папку для маунта наделяет правами регается в контрол плейне и запускает раннер с сайдкаром через который раннер подключается к кп по впн шлюзу"
     cmds:
       - mkdir -p ./data
       - chown 1000:1000 ./data
       - cargo run runner start --cp-address-runner 192.168.1.12:9096 --join-secret none --host-data-path "${PWD}/data" --host-data-bind "${PWD}/data"
+
+  player:connect:
+    desc: "обращается к кп за пресайн реквестом для регистрации в меш сети, регается в меш сети"
+    cmds:
+      - mkdir -p ./data
+      - chown 1000:1000 ./data
+      - cargo run user connect --cp-address-user 192.168.1.12:9095 --join-secret none
