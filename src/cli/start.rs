@@ -22,16 +22,16 @@ pub async fn handle(args: RunnerStartArgs) -> Result<()> {
     info!("CP MESH IP: {}", reg.cp_mesh_address);
  
     // 3. Поднимаем tailscale
-    info!("Bringing up tailscale mesh...");
-    let mesh_ip = tailscale::up(&reg.headscale_url, &reg.headscale_auth_key).await?;
-    info!("Mesh IP: {}", mesh_ip);
+    //info!("Bringing up tailscale mesh...");
+    //let mesh_ip = tailscale::up(&reg.headscale_url, &reg.headscale_auth_key).await?;
+    //info!("Mesh IP: {}", mesh_ip);
 
     // 4. Сохраняем состояние локально
     info!("Saving config...");
     let config = Config {
         //TODO
         cp_runner_addr: reg.cp_mesh_address.clone(),
-        mesh_ip: mesh_ip.clone(),
+        //mesh_ip: mesh_ip.clone(),
     };
     
     // Добавьте отладку
@@ -49,7 +49,7 @@ pub async fn handle(args: RunnerStartArgs) -> Result<()> {
     }
 
     // 5. Передаем полученный меш айпи в контрол плейн
-    let upd = cp.update_mesh_ip(reg.runner_token.clone(),mesh_ip.clone()).await?;
+    //let upd = cp.update_mesh_ip(reg.runner_token.clone(),mesh_ip.clone()).await?;
     // 6. Запускаем runner контейнер
     info!("Starting runner container...");
     runner::start(&reg, &args).await?;
