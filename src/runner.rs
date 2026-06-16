@@ -1,4 +1,5 @@
-use anyhow::{Result, Context};
+use anyhow::{bail,Result, Context};
+use std::process::Command;
 use bollard::plugin::DeviceMapping;
 use tracing::{info, error};
 use bollard::Docker;
@@ -20,6 +21,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
     info!("Registry endpoint: '{}'", reg.registry_endpoint);
     info!("mesh cp endpoint: '{}'", reg.cp_mesh_address);
 
+    // TODO pull sidecar image
     pull_image(
         &docker,
         &reg.runner_image,
@@ -109,11 +111,14 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         format!("CHILD_NETWORK_MODE=container:{}", sidecar_id),
     ];
 
+    let full_image = build_full_image_name(&reg.registry_endpoint, &reg.runner_image);
+    let docker_gid = get_docker_gid()?;
     let runner_config: ContainerCreateBody = ContainerCreateBody {
-        image: Some(reg.runner_image.clone()),
+        image: Some(full_image.clone()),
         env: Some(env),
         host_config: Some(HostConfig {
             network_mode: Some(format!("container:{}", sidecar_id)),  // разделяем сеть sidecar
+            group_add: Some(vec![docker_gid.to_string()]),
             binds: Some(vec![
                 "/var/run/docker.sock:/var/run/docker.sock".to_string(),
                 format!("{}:/data", args.host_data_bind),
@@ -164,6 +169,20 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
     // Опционально: можно также проверить health sidecar
     info!("Runner is running. Sidecar ID: {}", sidecar_id);
     Ok(())
+}
+
+fn get_docker_gid() -> Result<u32> {
+    let output = Command::new("getent")
+        .args(["group", "docker"])
+        .output()?;
+    let line = String::from_utf8(output.stdout)?;
+    let parts: Vec<&str> = line.split(':').collect();
+    if parts.len() >= 3 {
+        let gid = parts[2].parse::<u32>()?;
+        Ok(gid)
+    } else {
+        bail!("docker group not found")
+    }
 }
 
 fn build_registry_auth(username: &str, password: &str, server_address: &str) -> DockerCredentials {

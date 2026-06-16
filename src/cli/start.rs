@@ -12,7 +12,6 @@ pub async fn handle(args: RunnerStartArgs) -> Result<()> {
     // 1. Проверяем платформенные зависимости
     info!("Checking platform dependencies...");
     platform::check_docker().await?;
-    platform::check_tailscaled().await?;
  
     // 2. Регистрируемся в CP, получаем всё необходимое
     info!("Registering with control-plane at {}...", args.cp_address_runner);
