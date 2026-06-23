@@ -23,6 +23,7 @@ pub async fn up(login_server: &str, auth_key: &str) -> Result<String> {
         &format!("--login-server={}", login_server),
         &format!("--authkey={}", auth_key),
         "--accept-routes",
+        "--force-reauth",
     ]).await?;
     
     // Get the mesh IP after successful connection
