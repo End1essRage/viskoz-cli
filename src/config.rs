@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-const CONFIG_FILE: &str = "mgs-cli.toml";
+const CONFIG_FILE: &str = "viskoz-cli.toml";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -43,9 +43,9 @@ impl Config {
 }
 
 fn config_path() -> PathBuf {
-    // ~/.mgs-cli/mgs-cli.toml
+    // ~/.viskoz-cli/viskoz-cli.toml
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join(".mgs-cli")
+        .join(".viskoz-cli")
         .join(CONFIG_FILE)
 }

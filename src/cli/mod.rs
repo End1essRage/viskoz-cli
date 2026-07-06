@@ -6,7 +6,7 @@ pub mod status;
 pub mod connect;
 
 #[derive(Parser)]
-#[command(name = "mgs-cli", about = "GameHost runner manager")]
+#[command(name = "viskoz-cli", about = "GameHost runner manager")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -16,6 +16,7 @@ pub struct Cli {
 pub enum Commands {
     /// Команды для управления пользователями
     User(UserCommands),
+    
     /// Команды для управления раннером
     Runner(RunnerCommands),
 }

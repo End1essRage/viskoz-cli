@@ -1,10 +1,10 @@
 [package]
-name = "mgs-cli"
+name = "viskoz-cli"
 version = "0.0.1"
 edition = "2024"
 
 [[bin]]
-name = "mgs-cli"
+name = "viskoz-cli"
 path = "src/main.rs"
  
 [dependencies]

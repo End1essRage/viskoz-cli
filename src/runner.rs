@@ -46,7 +46,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         format!("TS_AUTHKEY={}", reg.headscale_auth_key.clone()),
         format!("TS_LOGIN_SERVER={}",reg.headscale_url.clone()),
         "TS_USERSPACE=false".to_string(),
-        format!("TS_STATE_DIR=/var/lib/tailscale/{}", sidecar_name),
+        "TS_STATE_DIR=/var/lib/tailscale".to_string(),
         format!("TS_HOSTNAME=runner-{}", Uuid::new_v4().simple()),
         format!("TS_EXTRA_ARGS=--accept-dns=false --login-server={} --accept-routes=false",reg.headscale_url.clone()),
         "TS_AUTH_ONCE=true".to_string(),
