@@ -22,7 +22,7 @@ cache:
 
 build-linux:
   stage: build
-  image: rust:1.82
+  image: rust:1.96
   script:
     - cargo build --release
   artifacts:
@@ -30,7 +30,7 @@ build-linux:
 
 build-windows:
   stage: build
-  image: rust:1.82
+  image: rust:1.96
   before_script:
     - rustup target add x86_64-pc-windows-gnu
     - apt-get update && apt-get install -y mingw-w64
