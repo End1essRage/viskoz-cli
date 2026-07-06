@@ -2,42 +2,41 @@ stages: [check, build, release]
 
 variables:
   CARGO_HOME: ${CI_PROJECT_DIR}/.cargo
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
 
-cache:
-  key: cargo-cache
-  paths: [.cargo/, target/]
-
-#fmt-clippy:
-#  stage: check
-#  image: rust:1.82
-#  script:
-#    - cargo fmt --check
-#    - cargo clippy --all-targets -- -D warnings
-
-#test:
-#  stage: check
-#  image: rust:1.82
-#  script:
-#    - cargo test --all
+.setup_submodules: &setup_submodules
+  - apt-get update && apt-get install -y --no-install-recommends protobuf-compiler
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/".insteadOf "git@${CI_SERVER_HOST}:"
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
 
 build-linux:
   stage: build
   image: rust:1.96
+  before_script: *setup_submodules
+  cache:
+    key: cargo-cache-linux
+    paths: [.cargo/, target/]
   script:
     - cargo build --release
   artifacts:
-    paths: [target/release/your-cli]
+    paths: [target/release/viskoz-cli]
 
 build-windows:
   stage: build
   image: rust:1.96
   before_script:
+    - *setup_submodules
     - rustup target add x86_64-pc-windows-gnu
-    - apt-get update && apt-get install -y mingw-w64
+    - apt-get install -y mingw-w64
+  cache:
+    key: cargo-cache-windows
+    paths: [.cargo/, target/]
   script:
     - cargo build --release --target x86_64-pc-windows-gnu
   artifacts:
-    paths: [target/x86_64-pc-windows-gnu/release/your-cli.exe]
+    paths: [target/x86_64-pc-windows-gnu/release/viskoz-cli.exe]
 
 release:
   stage: release
