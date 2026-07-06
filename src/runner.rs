@@ -1,5 +1,6 @@
 use anyhow::{bail, Result, Context};
 use std::process::Command;
+use std::os::unix::fs::MetadataExt;
 use bollard::plugin::{DeviceMapping, VolumeCreateRequest};
 use tracing::{info, error, warn};
 use bollard::Docker;
@@ -291,17 +292,13 @@ fn unix_only_devices() -> Option<Vec<DeviceMapping>> {
 
 #[cfg(unix)]
 fn get_docker_gid() -> Result<u32> {
-    let output = Command::new("getent")
-        .args(["group", "docker"])
-        .output()?;
-    let line = String::from_utf8(output.stdout)?;
-    let parts: Vec<&str> = line.split(':').collect();
-    if parts.len() >= 3 {
-        let gid = parts[2].parse::<u32>()?;
-        Ok(gid)
-    } else {
-        bail!("docker group not found")
+    let metadata = std::fs::metadata("/var/run/docker.sock")
+        .context("Не удалось получить метаданные /var/run/docker.sock. Убедитесь, что сокет смонтирован")?;
+    let gid = metadata.gid();
+    if gid == 0 {
+        bail!("GID сокета равен 0 (root). Возможно, сокет не принадлежит группе docker.");
     }
+    Ok(gid)
 }
 
 fn build_registry_auth(username: &str, password: &str, server_address: &str) -> DockerCredentials {
