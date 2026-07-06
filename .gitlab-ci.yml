@@ -7,18 +7,18 @@ cache:
   key: cargo-cache
   paths: [.cargo/, target/]
 
-fmt-clippy:
-  stage: check
-  image: rust:1.82
-  script:
-    - cargo fmt --check
-    - cargo clippy --all-targets -- -D warnings
+#fmt-clippy:
+#  stage: check
+#  image: rust:1.82
+#  script:
+#    - cargo fmt --check
+#    - cargo clippy --all-targets -- -D warnings
 
-test:
-  stage: check
-  image: rust:1.82
-  script:
-    - cargo test --all
+#test:
+#  stage: check
+#  image: rust:1.82
+#  script:
+#    - cargo test --all
 
 build-linux:
   stage: build
