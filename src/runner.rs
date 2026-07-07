@@ -132,8 +132,12 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
     info!("Tailscale sidecar healthy");
 
     // 3. Запускаем раннер в сети sidecar
+    let (local_uid, local_gid) = get_host_ids();
+
     let runner_name = format!("runner-{}", runner_id);
     let env = vec![
+        format!("LOCAL_UID={}", local_uid),
+        format!("LOCAL_GID={}", local_gid),
         format!("CONNECTOR_CP_ADDRESS={}", reg.cp_mesh_address),
         "CONNECTOR_INSECURE=true".to_string(),
         format!("CONNECTOR_TOKEN={}", reg.runner_token),
@@ -148,7 +152,6 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         "REGISTRY_TOKEN=".to_string(),
 
         format!("HOST_DATA_PATH={}", args.host_data_path),
-        "RUNNER_MOUNT_DIR=/data".to_string(),
         "HEARTBEATS_INTERVAL_SEC=5".to_string(),
         "METRICS_INTERVAL_SEC=30".to_string(),
 
@@ -164,7 +167,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
             group_add: docker_group_add()?,
             binds: Some(vec![
                 docker_sock_bind(),
-                format!("{}:/data", args.host_data_bind),
+                format!("{}:/data", args.host_data_path),
             ]),
             nano_cpus: Some((args.cpu_cores as i64) * 1_000_000_000),
             memory: Some((args.memory_mb as i64) * 1024 * 1024),
@@ -236,6 +239,20 @@ async fn wait_for_healthy(docker: &Docker, container_id: &str, timeout_secs: u64
 }
 
 // ---------- платформенно-зависимые куски ----------
+#[cfg(unix)]
+fn get_host_ids() -> (u32, u32) {
+    unsafe {
+        (libc::getuid(), libc::getgid())
+    }
+}
+
+#[cfg(windows)]
+fn get_host_ids() -> (u32, u32) {
+    // На Windows/Docker Desktop нет родного понятия UID/GID —
+    // юзер внутри Linux VM Docker Desktop всегда мапится в 1000:1000
+    // при обычном bind-mount, так что это безопасный дефолт
+    (1000, 1000)
+}
 
 #[cfg(unix)]
 fn docker_sock_bind() -> String {

@@ -15,7 +15,7 @@ tasks:
     cmds:
       - mkdir -p ./data
       - chown 1000:1000 ./data
-      - cargo run runner start --cp-address-runner cp.viskoz.dev:9096 --join-secret none --host-data-path "${PWD}/data" --host-data-bind "${PWD}/data"
+      - cargo run runner start --cp-address-runner cp.viskoz.dev:9096 --join-secret none --host-data-path "${PWD}/data"
 
   player:connect:
     desc: "обращается к кп за пресайн реквестом для регистрации в меш сети, регается в меш сети"

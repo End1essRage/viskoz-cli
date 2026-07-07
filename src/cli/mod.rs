@@ -78,9 +78,6 @@ pub struct RunnerStartArgs {
     #[arg(long, env = "HOST_DATA_PATH")]
     pub host_data_path: String,
 
-    #[arg(long, env = "HOST_DATA_BIND")]
-    pub host_data_bind: String,
-
     /// CPU cores доступные для runner'а
     #[arg(long, default_value = "2")]
     pub cpu_cores: u32,
