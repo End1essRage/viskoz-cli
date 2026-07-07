@@ -135,7 +135,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
     let (local_uid, local_gid) = get_host_ids();
 
     let runner_name = format!("runner-{}", runner_id);
-    let env = vec![
+    let mut env = vec![
         format!("LOCAL_UID={}", local_uid),
         format!("LOCAL_GID={}", local_gid),
         format!("CONNECTOR_CP_ADDRESS={}", reg.cp_mesh_address),
@@ -158,13 +158,22 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         format!("CHILD_NETWORK_MODE=container:{}", sidecar_id),
     ];
 
+    match get_docker_gid() {
+        Ok(docker_gid) => {
+            env.push(format!("DOCKER_GID={}", docker_gid));
+        }
+        Err(e)=> {
+             info!("DOCKER_GID не определен");
+        }
+    }
+
     let full_image = build_full_image_name(&reg.registry_endpoint, &reg.runner_image);
     let runner_config: ContainerCreateBody = ContainerCreateBody {
         image: Some(full_image.clone()),
         env: Some(env),
         host_config: Some(HostConfig {
             network_mode: Some(format!("container:{}", sidecar_id)),
-            group_add: docker_group_add()?,
+            //group_add: docker_group_add()?,
             binds: Some(vec![
                 docker_sock_bind(),
                 format!("{}:/data", args.host_data_path),
