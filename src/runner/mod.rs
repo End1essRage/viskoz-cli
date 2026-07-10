@@ -1,7 +1,6 @@
 use anyhow::{bail, Result, Context};
-use std::process::Command;
-use std::os::unix::fs::MetadataExt;
-use bollard::plugin::{DeviceMapping, VolumeCreateRequest};
+use crate::platform;
+use bollard::plugin::{VolumeCreateRequest};
 use tracing::{info, error, warn};
 use bollard::Docker;
 use bollard::auth::DockerCredentials;
@@ -107,8 +106,8 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         }),
         host_config: Some(HostConfig {
             network_mode: Some(net_name.clone()),
-            cap_add: unix_only_cap_add(),
-            devices: unix_only_devices(),
+            cap_add: platform::unix_only_cap_add(),
+            devices: platform::unix_only_devices(),
             binds: Some(vec![
                 format!("{}:/var/lib/tailscale", "ts-run-volume"),
             ]),
@@ -132,12 +131,13 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
     info!("Tailscale sidecar healthy");
 
     // 3. Запускаем раннер в сети sidecar
-    let (local_uid, local_gid) = get_host_ids();
+    let (local_uid, local_gid) = platform::get_host_ids();
 
     let runner_name = format!("runner-{}", runner_id);
     let mut env = vec![
         format!("LOCAL_UID={}", local_uid),
         format!("LOCAL_GID={}", local_gid),
+        format!("RUNNER_ID={}", runner_id),
         format!("CONNECTOR_CP_ADDRESS={}", reg.cp_mesh_address),
         "CONNECTOR_INSECURE=true".to_string(),
         format!("CONNECTOR_TOKEN={}", reg.runner_token),
@@ -158,7 +158,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
         format!("CHILD_NETWORK_MODE=container:{}", sidecar_id),
     ];
 
-    match get_docker_gid() {
+    match platform::get_docker_gid() {
         Ok(docker_gid) => {
             env.push(format!("DOCKER_GID={}", docker_gid));
         }
@@ -175,7 +175,7 @@ pub async fn start(reg: &RegisterRunnerResponse, args: &RunnerStartArgs) -> Resu
             network_mode: Some(format!("container:{}", sidecar_id)),
             //group_add: docker_group_add()?,
             binds: Some(vec![
-                docker_sock_bind(),
+                platform::docker_sock_bind(),
                 format!("{}:/data", args.host_data_path),
             ]),
             nano_cpus: Some((args.cpu_cores as i64) * 1_000_000_000),
@@ -245,86 +245,6 @@ async fn wait_for_healthy(docker: &Docker, container_id: &str, timeout_secs: u64
         }
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
     }
-}
-
-// ---------- платформенно-зависимые куски ----------
-#[cfg(unix)]
-fn get_host_ids() -> (u32, u32) {
-    unsafe {
-        (libc::getuid(), libc::getgid())
-    }
-}
-
-#[cfg(windows)]
-fn get_host_ids() -> (u32, u32) {
-    // На Windows/Docker Desktop нет родного понятия UID/GID —
-    // юзер внутри Linux VM Docker Desktop всегда мапится в 1000:1000
-    // при обычном bind-mount, так что это безопасный дефолт
-    (1000, 1000)
-}
-
-#[cfg(unix)]
-fn docker_sock_bind() -> String {
-    "/var/run/docker.sock:/var/run/docker.sock".to_string()
-}
-
-#[cfg(windows)]
-fn docker_sock_bind() -> String {
-    // TODO(windows): для Docker Desktop это именованный пайп, а не unix-сокет.
-    // Формат монтирования отличается и обычно требует --isolation=process
-    // либо Linux-контейнеров через WSL2-backend, где /var/run/docker.sock
-    // может быть доступен как обычно. Пока — заглушка под WSL2-режим.
-    "//./pipe/docker_engine://./pipe/docker_engine".to_string()
-}
-
-#[cfg(unix)]
-fn docker_group_add() -> Result<Option<Vec<String>>> {
-    Ok(Some(vec![get_docker_gid()?.to_string()]))
-}
-
-#[cfg(windows)]
-fn docker_group_add() -> Result<Option<Vec<String>>> {
-    // На Windows нет концепции unix-групп для сокета докера — не требуется.
-    Ok(None)
-}
-
-#[cfg(unix)]
-fn unix_only_cap_add() -> Option<Vec<String>> {
-    Some(vec!["NET_ADMIN".to_string()])
-}
-
-#[cfg(windows)]
-fn unix_only_cap_add() -> Option<Vec<String>> {
-    // TODO(windows): NET_ADMIN — linux capability, у Windows-контейнеров нет прямого аналога.
-    None
-}
-
-#[cfg(unix)]
-fn unix_only_devices() -> Option<Vec<DeviceMapping>> {
-    Some(vec![DeviceMapping {
-        path_on_host: Some("/dev/net/tun".to_string()),
-        path_in_container: Some("/dev/net/tun".to_string()),
-        cgroup_permissions: Some("rwm".to_string()),
-    }])
-}
-
-#[cfg(windows)]
-fn unix_only_devices() -> Option<Vec<DeviceMapping>> {
-    // TODO(windows): /dev/net/tun не существует в Windows-контейнерах.
-    // Практический путь для Windows-хостов — гонять tailscaled как Windows-сервис
-    // на хосте, а не как sidecar-контейнер, и подключать раннер к его localhost API.
-    None
-}
-
-#[cfg(unix)]
-fn get_docker_gid() -> Result<u32> {
-    let metadata = std::fs::metadata("/var/run/docker.sock")
-        .context("Не удалось получить метаданные /var/run/docker.sock. Убедитесь, что сокет смонтирован")?;
-    let gid = metadata.gid();
-    if gid == 0 {
-        bail!("GID сокета равен 0 (root). Возможно, сокет не принадлежит группе docker.");
-    }
-    Ok(gid)
 }
 
 fn build_registry_auth(username: &str, password: &str, server_address: &str) -> DockerCredentials {

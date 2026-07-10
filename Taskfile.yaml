@@ -23,3 +23,15 @@ tasks:
       - mkdir -p ./data
       - chown 1000:1000 ./data
       - cargo run user connect --cp-address-user cp.viskoz.dev:9095 --join-secret none
+
+  release:
+    cmds:
+      # - rustup target add x86_64-pc-windows-gnu
+      #- sudo pacman -S mingw-w64-gcc
+      - cargo build --release
+      - cargo build --release --target x86_64-pc-windows-gnu
+
+  upd:desktop:
+    cmds:
+      - cp /home/end1essrage/Projects/MGS/cli/target/release/viskoz-cli    /home/end1essrage/Projects/MGS/desktop/src-tauri/binaries/viskoz-cli-x86_64-unknown-linux-gnu
+      - cp /home/end1essrage/Projects/MGS/cli/target/x86_64-pc-windows-gnu/release/viskoz-cli.exe    /home/end1essrage/Projects/MGS/desktop/src-tauri/binaries/viskoz-cli-x86_64-pc-windows-msvc.exe

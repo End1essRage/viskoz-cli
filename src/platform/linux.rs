@@ -1,6 +1,44 @@
 use anyhow::{bail, Context, Result};
 use std::process::Command;
+use std::os::unix::fs::MetadataExt;
+use bollard::plugin::{DeviceMapping};
 use tracing::{info, warn};
+
+pub fn get_host_ids() -> (u32, u32) {
+    unsafe {
+        (libc::getuid(), libc::getgid())
+    }
+}
+
+pub fn get_docker_gid() -> Result<u32> {
+    let metadata = std::fs::metadata("/var/run/docker.sock")
+        .context("Не удалось получить метаданные /var/run/docker.sock. Убедитесь, что сокет смонтирован")?;
+    let gid = metadata.gid();
+    if gid == 0 {
+        bail!("GID сокета равен 0 (root). Возможно, сокет не принадлежит группе docker.");
+    }
+    Ok(gid)
+}
+
+pub fn unix_only_devices() -> Option<Vec<DeviceMapping>> {
+    Some(vec![DeviceMapping {
+        path_on_host: Some("/dev/net/tun".to_string()),
+        path_in_container: Some("/dev/net/tun".to_string()),
+        cgroup_permissions: Some("rwm".to_string()),
+    }])
+}
+
+pub fn docker_sock_bind() -> String {
+    "/var/run/docker.sock:/var/run/docker.sock".to_string()
+}
+
+pub fn docker_group_add() -> Result<Option<Vec<String>>> {
+    Ok(Some(vec![get_docker_gid()?.to_string()]))
+}
+
+pub fn unix_only_cap_add() -> Option<Vec<String>> {
+    Some(vec!["NET_ADMIN".to_string()])
+}
 
 pub async fn check_tailscaled() -> Result<()> {
     // 1. Проверка наличия бинарного файла
